@@ -1,0 +1,62 @@
+\meta:title{Customise base Vim on NixOS}
+\meta:date{2022-02-02}
+
+\begin{abstract}
+NixOS provides excellent ways of overriding and customising the Vim installation. However, those
+options are only available on the full Vim installation, while I was wanting to use them with the
+slimmer, base version. While not as straight-forward, it is still possible.
+\end{abstract}
+
+I recently discovered NixOS, which takes a new take on package management and OS configuration on
+Linux. The whole installation is controlled by a central configuration file, which allows to tweak
+all aspects of the system in a centralised way, using the numerous options NixOS puts at your
+disposition.
+
+While doing my configuration, I encountered a problem while trying to setup a minimal but useable
+installation of Vim. NixOS here provides different options depending on what you need, but the
+configuration I wanted was not as easy to put into place.
+
+\head1{The problem}
+
+NixOS basically proposes two packages for Vim: \code{vim} and \code{vim_configurable}. The first
+one provides a slim Vim binary, without GUI, while the latter provides a fatter installation,
+by default coming with Gtk GUI bundled in.
+
+In addition, \code{vim_configurable} also comes with syntax file for the nix language, used by the
+NixOS configuration. And, as its name indicates, you can configure it in a number of ways, including
+setting a default configuration or bundling plugins directly.
+
+While \code{vim_configurable} is quite nice and fullfills my needs, I do not wish to install a full
+GUI program on a machine I don't intend to use graphically. Here, basic Vim without GUI would be
+totally sufficient. However, this is doesn't come with either nix syntax files or ways of including
+plugins.
+
+One way would be to override build options of \code{vim_configurable} to disable GUI building.
+However, this means that since I have custom options, I would have to build the Vim package myself,
+and I think that having to recompile a complete Vim installation just to add a configuration file
+is silly.
+
+\head1{The solution}
+
+After looking around in nixpkgs's source code, I found out that the function \code{customize} from
+\code{vim_configurable} is added by the helper function \code{pkgs.vimUtils.makeCustomizable}, and
+this function can be called on other packages, including the original \code{vim} package to give
+it the same properties.
+
+As for nix language support, I just imported the \code{vim-nix} plugin. The real
+\code{vim_configurable} package uses the same for its syntax file, just including it differently.
+
+My final configuration file looks like so:
+
+\begin{code}
+programs.vim = {
+    package = (with pkgs; vimUtils.makeCustomizable vim).customize {
+        vimrcConfig.packages.my-bundle = with pkgs.vimPlugins; [
+            start = [ vim-nix ];
+        ];
+    \};
+\};
+\end{code}
+
+This way I can keep the default \code{vim} package from NixOS, which is slimmer, and still bring it
+customisations in a simple way without having to build my own package.
