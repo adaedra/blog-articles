@@ -51,9 +51,10 @@ My final configuration file looks like so:
 \begin{code}
 programs.vim = {
     package = (with pkgs; vimUtils.makeCustomizable vim).customize {
-        vimrcConfig.packages.my-bundle = with pkgs.vimPlugins; [
+        name = "vim";
+        vimrcConfig.packages.my-bundle = with pkgs.vimPlugins; {
             start = [ vim-nix ];
-        ];
+        };
     \};
 \};
 \end{code}
