@@ -54,7 +54,7 @@ programs.vim = {
         name = "vim";
         vimrcConfig.packages.my-bundle = with pkgs.vimPlugins; {
             start = [ vim-nix ];
-        };
+        \};
     \};
 \};
 \end{code}
